@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import 'app_drawer.dart';
 
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+  const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +32,7 @@ class DashboardScreen extends StatelessWidget {
           ),
         ],
       ),
+      drawer: const AppDrawer(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -49,7 +51,10 @@ class DashboardScreen extends StatelessWidget {
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                    colors: [
+                      Color(0xFF667eea),
+                      Color.fromARGB(255, 114, 162, 75)
+                    ],
                   ),
                   borderRadius: BorderRadius.circular(16.0),
                 ),
@@ -109,9 +114,9 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Features Grid
+            // Quick Actions
             Text(
-              'Features',
+              'Quick Actions',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.grey[800],
@@ -130,27 +135,35 @@ class DashboardScreen extends StatelessWidget {
               children: [
                 _buildFeatureCard(
                   context,
-                  'Profile Settings',
-                  'Manage your account preferences and personal information',
-                  Icons.person,
+                  'Register Project',
+                  'Start a new project registration',
+                  Icons.app_registration,
+                  () {
+                    Navigator.pushNamed(context, '/project-registration');
+                  },
                 ),
                 _buildFeatureCard(
                   context,
-                  'Security',
-                  'Update your password and security settings',
-                  Icons.security,
+                  'Daily Report',
+                  'Submit daily track report',
+                  Icons.track_changes,
+                  () {
+                    Navigator.pushNamed(context, '/daily-track');
+                  },
                 ),
                 _buildFeatureCard(
                   context,
-                  'Notifications',
-                  'Configure how you receive notifications',
-                  Icons.notifications,
+                  'My Projects',
+                  'View your registered projects',
+                  Icons.work,
+                  () {},
                 ),
                 _buildFeatureCard(
                   context,
-                  'Settings',
-                  'Customize your application settings',
-                  Icons.settings,
+                  'Reports',
+                  'View all your reports',
+                  Icons.assessment,
+                  () {},
                 ),
               ],
             ),
@@ -233,42 +246,47 @@ class DashboardScreen extends StatelessWidget {
     String title,
     String description,
     IconData icon,
+    VoidCallback onTap,
   ) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              icon,
-              size: 32,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Colors.black87,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12.0),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                icon,
+                size: 32,
+                color: Theme.of(context).colorScheme.primary,
               ),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: Text(
-                description,
+              const SizedBox(height: 12),
+              Text(
+                title,
                 style: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.black87,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Expanded(
+                child: Text(
+                  description,
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

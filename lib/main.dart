@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/project_provider.dart'; // Add this import
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/project_registration_screen.dart';
+import 'screens/daily_track_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,18 +16,26 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => AuthProvider(),
+    return MultiProvider(
+      // Change from ChangeNotifierProvider to MultiProvider
+      providers: [
+        ChangeNotifierProvider(create: (context) => AuthProvider()),
+        ChangeNotifierProvider(
+            create: (context) => ProjectProvider()), // Add this line
+      ],
       child: MaterialApp(
-        title: 'Auth Final',
+        title: "Auth Final",
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF667eea)),
+          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6786ee)),
           useMaterial3: true,
         ),
         home: const AuthWrapper(),
         routes: {
           '/login': (context) => const LoginScreen(),
           '/dashboard': (context) => const DashboardScreen(),
+          '/project-registration': (context) =>
+              const ProjectRegistrationScreen(),
+          '/daily-track': (context) => const DailyTrackScreen(),
         },
       ),
     );
@@ -38,18 +49,10 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
 
-    // Show loading while checking auth state
-    if (authProvider.isLoading && authProvider.user == null) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+    if (authProvider.isAuthenticated) {
+      return const DashboardScreen();
+    } else {
+      return const LoginScreen();
     }
-
-    // Redirect based on auth state
-    return authProvider.isAuthenticated
-        ? const DashboardScreen()
-        : const LoginScreen();
   }
 }

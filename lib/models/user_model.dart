@@ -11,7 +11,7 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'] ?? '',
+      id: json['id']?.toString() ?? '',
       email: json['email'] ?? '',
       name: json['name'],
     );
@@ -23,5 +23,10 @@ class User {
       'email': email,
       'name': name,
     };
+  }
+
+  @override
+  String toString() {
+    return 'User(id: $id, email: $email, name: $name)';
   }
 }

@@ -17,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoadingGoogle = false;
 
   @override
   void dispose() {
@@ -49,6 +50,29 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _isLoadingGoogle = true);
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProvider.loginWithGoogle();
+
+    setState(() => _isLoadingGoogle = false);
+
+    if (success && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.error ?? 'Google login failed'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -59,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+            colors: [Color(0xFF667eea), Color.fromARGB(255, 75, 162, 100)],
           ),
         ),
         child: Center(
@@ -93,7 +117,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                       ),
                       const SizedBox(height: 32),
-                      if (authProvider.error != null)
+
+                      // Error message
+                      if (authProvider.error != null) ...[
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(12.0),
@@ -108,8 +134,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             textAlign: TextAlign.center,
                           ),
                         ),
-                      if (authProvider.error != null)
                         const SizedBox(height: 16),
+                      ],
+
+                      // Email field
                       CustomTextField(
                         label: 'Email Address',
                         controller: _emailController,
@@ -125,6 +153,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
+
+                      // Password field
                       CustomTextField(
                         label: 'Password',
                         controller: _passwordController,
@@ -140,11 +170,75 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
                       const SizedBox(height: 24),
+
+                      // Login button
                       LoadingButton(
                         text: 'Sign In',
                         isLoading: authProvider.isLoading,
                         onPressed: _login,
                       ),
+
+                      // Google login section
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(child: Divider(color: Colors.grey[300])),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'OR',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          Expanded(child: Divider(color: Colors.grey[300])),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Google login button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: OutlinedButton.icon(
+                          onPressed:
+                              (authProvider.isLoading || _isLoadingGoogle)
+                                  ? null
+                                  : _handleGoogleLogin,
+                          icon: _isLoadingGoogle
+                              ? SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.grey[600]!,
+                                    ),
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.g_mobiledata,
+                                  size: 24,
+                                  color: Colors.red,
+                                ),
+                          label: Text(
+                            _isLoadingGoogle
+                                ? 'Signing in...'
+                                : 'Continue with Google',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: Colors.grey.shade300),
+                            backgroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+
                       const SizedBox(height: 16),
                       TextButton(
                         onPressed: () {
@@ -157,14 +251,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           );
                         },
                         child: RichText(
-                          text: TextSpan(
+                          text: const TextSpan(
                             text: "Don't have an account? ",
-                            style: const TextStyle(color: Colors.grey),
+                            style: TextStyle(color: Colors.grey),
                             children: [
                               TextSpan(
                                 text: 'Sign up',
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primary,
+                                  color: Colors.blue,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),

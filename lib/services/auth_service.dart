@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:auth_final/models/auth_response.dart';
+import 'package:auth_final/models/user_model.dart';
 import 'package:http/http.dart' as http;
 
 class AuthService {
-  static const String baseUrl = 'http://10.0.2.2:9090/auth';
-
+  static const String baseUrl = 'http://10.0.2.2:9292/user';
+  static const String baseUrl2 = 'http://10.0.2.2:8181';
   // Register user
   static Future<AuthResponse?> register({
     required String name,
@@ -30,6 +31,36 @@ class AuthService {
       }
     } catch (e) {
       throw Exception('Registration error: $e');
+    }
+  }
+
+// Add this to your existing AuthService class
+  static Future<AuthResponse?> loginWithGoogle({
+    required String? accessToken,
+    required String? idToken,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl2/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'provider': 'google',
+          'accessToken': accessToken,
+          'idToken': idToken,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return AuthResponse(
+          token: data['token'],
+          // user: User.fromJson(data['user']),
+        );
+      } else {
+        throw Exception('Google login failed: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Google login error: $e');
     }
   }
 

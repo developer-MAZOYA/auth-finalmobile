@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
-import 'providers/project_provider.dart'; // Add this import
+import 'providers/project_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/project_registration_screen.dart';
@@ -17,11 +17,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      // Change from ChangeNotifierProvider to MultiProvider
       providers: [
         ChangeNotifierProvider(create: (context) => AuthProvider()),
-        ChangeNotifierProvider(
-            create: (context) => ProjectProvider()), // Add this line
+        ChangeNotifierProvider(create: (context) => ProjectProvider()),
       ],
       child: MaterialApp(
         title: "Auth Final",

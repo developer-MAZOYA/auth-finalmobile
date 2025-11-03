@@ -41,10 +41,10 @@ class AuthProvider with ChangeNotifier {
 
       if (response != null) {
         _token = response.token;
-        // _user = response.user;
+        _user = response.user; // ← UNCOMMENT THIS LINE
 
         await StorageService.saveToken(response.token);
-        //  await StorageService.saveUser(response.user);
+        await StorageService.saveUser(response.user); // ← UNCOMMENT THIS LINE
 
         _isLoading = false;
         notifyListeners();
@@ -56,31 +56,6 @@ class AuthProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return false;
-    }
-  }
-
-// Add this method to test Google Sign-In separately
-  Future<void> testGoogleSignIn() async {
-    try {
-      print('🧪 Testing Google Sign-In configuration...');
-
-      final GoogleSignIn googleSignIn = GoogleSignIn();
-      final account = await googleSignIn.signIn();
-
-      if (account != null) {
-        print('✅ Google Sign-In test successful: ${account.email}');
-        final auth = await account.authentication;
-        print('✅ Access Token: ${auth.accessToken != null ? "YES" : "NO"}');
-        print('✅ ID Token: ${auth.idToken != null ? "YES" : "NO"}');
-      } else {
-        print('❌ Google Sign-In test: User cancelled');
-      }
-    } catch (e) {
-      print('❌ Google Sign-In test failed: $e');
-      if (e is PlatformException) {
-        print('❌ Error Code: ${e.code}');
-        print('❌ Error Message: ${e.message}');
-      }
     }
   }
 
@@ -105,9 +80,6 @@ class AuthProvider with ChangeNotifier {
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
       print('✅ Google authentication successful');
-      print(
-          '📱 Access Token: ${googleAuth.accessToken != null ? "Received" : "NULL"}');
-      print('📱 ID Token: ${googleAuth.idToken != null ? "Received" : "NULL"}');
 
       final response = await AuthService.loginWithGoogle(
         accessToken: googleAuth.accessToken,
@@ -116,10 +88,10 @@ class AuthProvider with ChangeNotifier {
 
       if (response != null) {
         _token = response.token;
-        // _user = response.user;
+        _user = response.user; // ← UNCOMMENT THIS LINE
 
         await StorageService.saveToken(response.token);
-        //  await StorageService.saveUser(response.user);
+        await StorageService.saveUser(response.user); // ← UNCOMMENT THIS LINE
 
         _isLoading = false;
         notifyListeners();
@@ -130,38 +102,18 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
       return false;
     } catch (e) {
-      print('❌ ========== GOOGLE SIGN-IN ERROR ==========');
-      print('❌ Exception Type: ${e.runtimeType}');
-      print('❌ Full Exception: $e');
+      print('❌ Google Sign-In error: $e');
 
-      // Specifically handle PlatformException
       if (e is PlatformException) {
-        print('❌ PlatformException Code: ${e.code}');
-        print('❌ PlatformException Message: ${e.message}');
-        print('❌ PlatformException Details: ${e.details}');
-
-        // Set user-friendly error message based on the code
         switch (e.code) {
           case 'sign_in_failed':
-            _error =
-                'Google Sign-In configuration error. Check your Google Cloud Console setup.';
+            _error = 'Google Sign-In configuration error.';
             break;
           case 'sign_in_required':
             _error = 'Please sign in to your Google account.';
             break;
           case 'network_error':
             _error = 'Network error. Please check your internet connection.';
-            break;
-          case 'invalid_account':
-            _error =
-                'Invalid Google account. Please try with a different account.';
-            break;
-          case 'internal_error':
-            _error = 'Internal error. Please try again.';
-            break;
-          case 'developer_error':
-            _error =
-                'Developer error. Check app configuration in Google Cloud Console.';
             break;
           case 'sign_in_canceled':
             _error = 'Google sign in was cancelled.';
@@ -172,9 +124,6 @@ class AuthProvider with ChangeNotifier {
       } else {
         _error = 'Google Sign-In error: $e';
       }
-
-      print('❌ Error message shown to user: $_error');
-      print('❌ ========== END ERROR ==========');
 
       _isLoading = false;
       notifyListeners();
@@ -196,10 +145,10 @@ class AuthProvider with ChangeNotifier {
 
       if (response != null) {
         _token = response.token;
-        // _user = response.user;
+        _user = response.user; // ← UNCOMMENT THIS LINE
 
         await StorageService.saveToken(response.token);
-        // await StorageService.saveUser(response.user);
+        await StorageService.saveUser(response.user); // ← UNCOMMENT THIS LINE
 
         _isLoading = false;
         notifyListeners();
@@ -226,5 +175,30 @@ class AuthProvider with ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  // Add this method to test Google Sign-In separately
+  Future<void> testGoogleSignIn() async {
+    try {
+      print('🧪 Testing Google Sign-In configuration...');
+
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final account = await googleSignIn.signIn();
+
+      if (account != null) {
+        print('✅ Google Sign-In test successful: ${account.email}');
+        final auth = await account.authentication;
+        print('✅ Access Token: ${auth.accessToken != null ? "YES" : "NO"}');
+        print('✅ ID Token: ${auth.idToken != null ? "YES" : "NO"}');
+      } else {
+        print('❌ Google Sign-In test: User cancelled');
+      }
+    } catch (e) {
+      print('❌ Google Sign-In test failed: $e');
+      if (e is PlatformException) {
+        print('❌ Error Code: ${e.code}');
+        print('❌ Error Message: ${e.message}');
+      }
+    }
   }
 }

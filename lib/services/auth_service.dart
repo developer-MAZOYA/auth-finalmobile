@@ -54,7 +54,7 @@ class AuthService {
         final data = json.decode(response.body);
         return AuthResponse(
           token: data['token'],
-          // user: User.fromJson(data['user']),
+          user: User.fromJson(data['user']),
         );
       } else {
         throw Exception('Google login failed: ${response.statusCode}');

@@ -1,11 +1,11 @@
 import 'dart:convert';
 
-import 'package:auth_final/models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/user_model.dart';
 
 class StorageService {
-  static const String _tokenKey = 'bearerToken';
-  static const String _userKey = 'userData';
+  static const String _tokenKey = 'auth_token';
+  static const String _userKey = 'user_data';
 
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
@@ -19,7 +19,7 @@ class StorageService {
 
   static Future<void> saveUser(User user) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userKey, user.toJson().toString());
+    await prefs.setString(_userKey, jsonEncode(user.toJson()));
   }
 
   static Future<User?> getUser() async {
@@ -27,10 +27,10 @@ class StorageService {
     final userJson = prefs.getString(_userKey);
     if (userJson != null) {
       try {
-        final userMap = Map<String, dynamic>.from(json.decode(userJson));
-        return User.fromJson(userMap);
+        return User.fromJson(jsonDecode(userJson));
       } catch (e) {
-        print('Error parsing user data: $e');
+        print('Error parsing stored user: $e');
+        return null;
       }
     }
     return null;

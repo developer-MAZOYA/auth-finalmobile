@@ -101,18 +101,39 @@ class DashboardScreen extends StatelessWidget {
                             color: Colors.grey[800],
                           ),
                     ),
-                    const SizedBox(height: 16),
+                    const Divider(),
+                    const SizedBox(height: 7),
+
+                    // DEBUG: Check why user is null
                     if (user != null) ...[
                       _buildInfoItem('Email', user.email),
                       if (user.name != null) _buildInfoItem('Name', user.name!),
-                      _buildInfoItem('User ID', user.id),
                       _buildInfoItemWithBadge('Status', 'Active'),
+                    ] else ...[
+                      // Show loading or error state
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 16),
+                            Text(
+                              'Loading user information...',
+                              style: TextStyle(color: Colors.grey[600]),
+                            ),
+                            // DEBUG: Add this to see what's wrong
+                            Text(
+                              'User object is null',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 24),
 
             // Quick Actions
             Text(

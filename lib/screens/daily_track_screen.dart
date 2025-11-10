@@ -35,7 +35,7 @@ class _DailyTrackScreenState extends State<DailyTrackScreen> {
         foregroundColor: Colors.grey[800],
       ),
       drawer: const AppDrawer(),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -58,7 +58,8 @@ class _DailyTrackScreenState extends State<DailyTrackScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      _buildTextField('Activity Description',
+                      _buildTextField(
+                          'Activity Description & Resource Available',
                           _activityDescriptionController,
                           maxLines: 3),
                       const SizedBox(height: 12),
@@ -218,19 +219,32 @@ class _DailyTrackScreenState extends State<DailyTrackScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 0.8,
-          ),
-          itemCount: _capturedEvidence.length,
-          itemBuilder: (context, index) {
-            final evidence = _capturedEvidence[index];
-            return _buildEvidenceItem(evidence, index);
+        LayoutBuilder(
+          // ADDED LayoutBuilder
+          builder: (context, constraints) {
+            final crossAxisCount = 3;
+            final itemHeight = 120.0; // Fixed height for each item
+            final rowCount = (_capturedEvidence.length / crossAxisCount).ceil();
+            final totalHeight = (rowCount * itemHeight) + ((rowCount - 1) * 8);
+
+            return SizedBox(
+              height: totalHeight, // FIXED: Set explicit height
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 0.8,
+                ),
+                itemCount: _capturedEvidence.length,
+                itemBuilder: (context, index) {
+                  final evidence = _capturedEvidence[index];
+                  return _buildEvidenceItem(evidence, index);
+                },
+              ),
+            );
           },
         ),
       ],

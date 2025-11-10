@@ -10,7 +10,13 @@ class AuthProvider with ChangeNotifier {
   String? _token;
   bool _isLoading = false;
   String? _error;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+  // UPDATED: Add serverClientId to GoogleSignIn configuration
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+    serverClientId:
+        '1054959956859-84c10kotk7ij5vk6kt4m8bsk8ai2ircf.apps.googleusercontent.com',
+  );
 
   User? get user => _user;
   String? get token => _token;
@@ -41,10 +47,10 @@ class AuthProvider with ChangeNotifier {
 
       if (response != null) {
         _token = response.token;
-        _user = response.user; // ← UNCOMMENT THIS LINE
+        _user = response.user;
 
         await StorageService.saveToken(response.token);
-        await StorageService.saveUser(response.user); // ← UNCOMMENT THIS LINE
+        await StorageService.saveUser(response.user);
 
         _isLoading = false;
         notifyListeners();
@@ -80,6 +86,8 @@ class AuthProvider with ChangeNotifier {
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
       print('✅ Google authentication successful');
+      print('🔑 Access Token: ${googleAuth.accessToken}');
+      print('🔑 ID Token: ${googleAuth.idToken}');
 
       final response = await AuthService.loginWithGoogle(
         accessToken: googleAuth.accessToken,
@@ -88,10 +96,10 @@ class AuthProvider with ChangeNotifier {
 
       if (response != null) {
         _token = response.token;
-        _user = response.user; // ← UNCOMMENT THIS LINE
+        _user = response.user;
 
         await StorageService.saveToken(response.token);
-        await StorageService.saveUser(response.user); // ← UNCOMMENT THIS LINE
+        await StorageService.saveUser(response.user);
 
         _isLoading = false;
         notifyListeners();
@@ -145,10 +153,10 @@ class AuthProvider with ChangeNotifier {
 
       if (response != null) {
         _token = response.token;
-        _user = response.user; // ← UNCOMMENT THIS LINE
+        _user = response.user;
 
         await StorageService.saveToken(response.token);
-        await StorageService.saveUser(response.user); // ← UNCOMMENT THIS LINE
+        await StorageService.saveUser(response.user);
 
         _isLoading = false;
         notifyListeners();
@@ -177,19 +185,34 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Add this method to test Google Sign-In separately
+  // UPDATED: Test method with client ID
   Future<void> testGoogleSignIn() async {
     try {
       print('🧪 Testing Google Sign-In configuration...');
 
-      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'],
+        serverClientId:
+            '1054959956859-84c10kotk7ij5vk6kt4m8bsk8ai2ircf.apps.googleusercontent.com',
+      );
+
       final account = await googleSignIn.signIn();
 
       if (account != null) {
         print('✅ Google Sign-In test successful: ${account.email}');
         final auth = await account.authentication;
-        print('✅ Access Token: ${auth.accessToken != null ? "YES" : "NO"}');
-        print('✅ ID Token: ${auth.idToken != null ? "YES" : "NO"}');
+        print(
+            '✅ Access Token: ${auth.accessToken != null ? "PRESENT" : "MISSING"}');
+        print('✅ ID Token: ${auth.idToken != null ? "PRESENT" : "MISSING"}');
+
+        if (auth.accessToken != null) {
+          print(
+              '🔑 Access Token (first 20 chars): ${auth.accessToken!.substring(0, 20)}...');
+        }
+        if (auth.idToken != null) {
+          print(
+              '🔑 ID Token (first 20 chars): ${auth.idToken!.substring(0, 20)}...');
+        }
       } else {
         print('❌ Google Sign-In test: User cancelled');
       }
@@ -198,6 +221,7 @@ class AuthProvider with ChangeNotifier {
       if (e is PlatformException) {
         print('❌ Error Code: ${e.code}');
         print('❌ Error Message: ${e.message}');
+        print('❌ Error Details: ${e.details}');
       }
     }
   }

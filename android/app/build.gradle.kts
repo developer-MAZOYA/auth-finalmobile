@@ -40,6 +40,7 @@ android {
     }
 }
 
+
 flutter {
     source = "../.."
 }

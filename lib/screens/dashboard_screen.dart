@@ -104,27 +104,25 @@ class DashboardScreen extends StatelessWidget {
                     const Divider(),
                     const SizedBox(height: 7),
 
-                    // DEBUG: Check why user is null
+                    // Show user info or loading state
                     if (user != null) ...[
                       _buildInfoItem('Email', user.email),
                       if (user.name != null) _buildInfoItem('Name', user.name!),
                       _buildInfoItemWithBadge('Status', 'Active'),
                     ] else ...[
-                      // Show loading or error state
                       Container(
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 16),
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 16),
                             Text(
                               'Loading user information...',
                               style: TextStyle(color: Colors.grey[600]),
                             ),
-                            // DEBUG: Add this to see what's wrong
                             Text(
                               'User object is null',
-                              style: TextStyle(color: Colors.red),
+                              style: TextStyle(color: Colors.red[700]),
                             ),
                           ],
                         ),
@@ -135,6 +133,8 @@ class DashboardScreen extends StatelessWidget {
               ),
             ),
 
+            const SizedBox(height: 24),
+
             // Quick Actions
             Text(
               'Quick Actions',
@@ -144,15 +144,15 @@ class DashboardScreen extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 16),
-            GridView(
+
+            /// ✅ FIXED GRID SECTION — overflow-safe and responsive
+            GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.2,
-              ),
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.3, // maintain consistent height
               children: [
                 _buildFeatureCard(
                   context,
@@ -277,10 +277,11 @@ class DashboardScreen extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12.0),
-        child: Padding(
+        child: Container(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Icon(
                 icon,
@@ -295,16 +296,18 @@ class DashboardScreen extends StatelessWidget {
                   fontSize: 16,
                   color: Colors.black87,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 8),
-              Expanded(
-                child: Text(
-                  description,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                  ),
+              Text(
+                description,
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 14,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

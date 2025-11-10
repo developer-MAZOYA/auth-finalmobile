@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => ProjectProvider()),
       ],
       child: MaterialApp(
-        title: "Auth Final",
+        title: "TRR Site Report",
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6786ee)),
           useMaterial3: true,

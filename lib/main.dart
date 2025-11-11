@@ -6,6 +6,7 @@ import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/project_registration_screen.dart';
 import 'screens/daily_track_screen.dart';
+import 'screens/observation_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
           '/dashboard': (context) => const DashboardScreen(),
           '/project-registration': (context) =>
               const ProjectRegistrationScreen(),
+          '/observations': (context) => const ObservationScreen(),
           '/daily-track': (context) => const DailyTrackScreen(),
         },
       ),

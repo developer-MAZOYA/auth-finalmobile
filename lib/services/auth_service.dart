@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 class AuthService {
   //static const String baseUrl = 'http://10.0.2.2:9292/user';
   static const String baseUrl = 'http://192.168.1.132:9292/user';
-  // static const String baseUrl2 = 'http://10.0.2.2:9595';
+  //static const String baseUrl2 = 'http://10.0.2.2:9595';
   static const String baseUrl2 = 'http://192.168.1.132:9595';
   // Register user
   static Future<AuthResponse?> register({

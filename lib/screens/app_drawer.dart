@@ -115,11 +115,11 @@ class AppDrawer extends StatelessWidget {
                     ),
                     _buildDrawerItem(
                       context,
-                      Icons.app_registration,
-                      'Project Registration',
+                      Icons.work,
+                      'Project Registred',
                       () {
                         Navigator.pop(context);
-                        Navigator.pushNamed(context, '/project-registration');
+                        Navigator.pushNamed(context, '/project-registred');
                       },
                     ),
                     _buildDrawerItem(
@@ -137,7 +137,7 @@ class AppDrawer extends StatelessWidget {
                       'Feedback',
                       () {
                         Navigator.pop(context);
-                        // Add feedback navigation
+                        Navigator.pushNamed(context, '/feedback');
                       },
                     ),
                     const Divider(),

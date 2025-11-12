@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/draft_provider.dart';
 import 'app_drawer.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -9,6 +10,7 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final draftProvider = Provider.of<DraftProvider>(context);
     final user = authProvider.user;
 
     return Scaffold(
@@ -19,6 +21,49 @@ class DashboardScreen extends StatelessWidget {
         elevation: 0,
         foregroundColor: Colors.grey[800],
         actions: [
+          // Notification Icon
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications),
+                onPressed: () {
+                  _showNotifications(context);
+                },
+              ),
+              if (draftProvider.draftCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 14,
+                      minHeight: 14,
+                    ),
+                    child: Text(
+                      '${draftProvider.draftCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          // Sync Button
+          IconButton(
+            icon: const Icon(Icons.sync),
+            onPressed: () {
+              _syncDrafts(context);
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
@@ -130,10 +175,6 @@ class DashboardScreen extends StatelessWidget {
                                     'Loading user information...',
                                     style: TextStyle(color: Colors.grey[600]),
                                   ),
-                                  Text(
-                                    'User object is null',
-                                    style: TextStyle(color: Colors.red[700]),
-                                  ),
                                 ],
                               ),
                             ),
@@ -146,31 +187,51 @@ class DashboardScreen extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // Quick Actions
-                  Text(
-                    'Quick Actions',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey[800],
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Quick Actions',
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey[800],
+                                  ),
                         ),
+                      ),
+                      if (draftProvider.draftCount > 0)
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.sync, size: 16),
+                          label: const Text('Sync All'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                          ),
+                          onPressed: () => _syncDrafts(context),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 16),
 
-                  // ✅ Reduced height by adjusting aspect ratio & padding
+                  // Quick Actions Grid
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisCount: 2,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
-                    childAspectRatio: 1.4, // Increased from 0.9 → shorter cards
+                    childAspectRatio: 1.4,
                     children: [
                       _buildFeatureCard(
                         context,
-                        'Observation Details',
-                        'View and manage all recorded observations',
-                        Icons.remove_red_eye_outlined,
+                        'Draft Reports',
+                        '${draftProvider.draftCount} reports pending sync',
+                        Icons.drafts,
+                        Colors.orange,
                         () {
-                          Navigator.pushNamed(context, '/observations');
+                          Navigator.pushNamed(context, '/drafts');
                         },
                       ),
                       _buildFeatureCard(
@@ -178,6 +239,7 @@ class DashboardScreen extends StatelessWidget {
                         'Daily Report',
                         'Submit daily track report',
                         Icons.track_changes,
+                        Colors.blue,
                         () {
                           Navigator.pushNamed(context, '/daily-track');
                         },
@@ -187,6 +249,7 @@ class DashboardScreen extends StatelessWidget {
                         'My Projects',
                         'View your registered projects',
                         Icons.work_outline,
+                        Colors.green,
                         () {
                           Navigator.pushNamed(context, '/projects');
                         },
@@ -196,8 +259,9 @@ class DashboardScreen extends StatelessWidget {
                         'Reports',
                         'View all your reports',
                         Icons.assessment_outlined,
+                        Colors.purple,
                         () {
-                          Navigator.pushNamed(context, '/');
+                          Navigator.pushNamed(context, '/reports');
                         },
                       ),
                     ],
@@ -286,6 +350,7 @@ class DashboardScreen extends StatelessWidget {
     String title,
     String description,
     IconData icon,
+    Color color,
     VoidCallback onTap,
   ) {
     return Card(
@@ -297,19 +362,25 @@ class DashboardScreen extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12.0),
         child: Padding(
-          padding: const EdgeInsets.all(12.0), // reduced padding
+          padding: const EdgeInsets.all(12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ✅ Icon + title same line
               Row(
                 children: [
-                  Icon(
-                    icon,
-                    size: 26,
-                    color: Theme.of(context).colorScheme.primary,
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 24,
+                      color: color,
+                    ),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       title,
@@ -324,12 +395,12 @@ class DashboardScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Text(
                 description,
                 style: const TextStyle(
                   color: Colors.grey,
-                  fontSize: 13,
+                  fontSize: 12,
                   height: 1.3,
                 ),
                 maxLines: 2,
@@ -338,6 +409,147 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showNotifications(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.notifications, color: Colors.blue),
+            SizedBox(width: 8),
+            Text('Notifications'),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildNotificationItem(
+                'Sync Required',
+                'You have unsynced draft reports',
+                Icons.sync_problem,
+                Colors.orange,
+              ),
+              _buildNotificationItem(
+                'New Features',
+                'Daily report drafting available',
+                Icons.new_releases,
+                Colors.blue,
+              ),
+              _buildNotificationItem(
+                'System Update',
+                'App updated to version 2.1.0',
+                Icons.system_update,
+                Colors.green,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationItem(
+      String title, String message, IconData icon, Color color) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  message,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _syncDrafts(BuildContext context) {
+    final draftProvider = Provider.of<DraftProvider>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sync Drafts'),
+        content: const Text('Are you sure you want to sync all draft reports?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              // Show progress dialog
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const AlertDialog(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Syncing drafts...'),
+                    ],
+                  ),
+                ),
+              );
+
+              // Simulate sync process
+              await Future.delayed(const Duration(seconds: 2));
+
+              Navigator.pop(context); // Close progress dialog
+
+              // Call sync method
+              await draftProvider.syncAllDrafts();
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('All drafts synced successfully'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            child: const Text('Sync Now'),
+          ),
+        ],
       ),
     );
   }

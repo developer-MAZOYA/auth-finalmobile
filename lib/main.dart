@@ -2,11 +2,13 @@ import 'package:auth_final/screens/projects_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/draft_provider.dart';
 import 'providers/project_provider.dart';
+import 'screens/draft_reports_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/daily_track_screen.dart';
-import 'screens/observation_screen.dart';
+import 'screens/reports_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,6 +23,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (context) => AuthProvider()),
         ChangeNotifierProvider(create: (context) => ProjectProvider()),
+        ChangeNotifierProvider(create: (_) => DraftProvider()),
       ],
       child: MaterialApp(
         title: "TRR Site Report",
@@ -32,9 +35,10 @@ class MyApp extends StatelessWidget {
         routes: {
           '/login': (context) => const LoginScreen(),
           '/dashboard': (context) => const DashboardScreen(),
-          '/observations': (context) => const ObservationScreen(),
           '/daily-track': (context) => const DailyTrackScreen(),
           '/projects': (context) => ProjectsScreen(),
+          '/drafts': (context) => const DraftReportsScreen(),
+          '/reports': (context) => const ReportsScreen(),
         },
       ),
     );

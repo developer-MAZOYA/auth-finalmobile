@@ -20,6 +20,7 @@ dependencies:
   flutter_secure_storage: ^9.2.4
   geolocator: ^11.0.1
   geocoding: ^2.1.1
+  intl: ^0.18.1
   permission_handler: ^11.0.1
   image_picker: ^1.2.0
   camera: ^0.11.2+1

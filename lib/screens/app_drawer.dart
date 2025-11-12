@@ -123,18 +123,6 @@ class AppDrawer extends StatelessWidget {
                         Navigator.pushNamed(context, '/projects');
                       },
                     ),
-
-                    // ADDING THE OBSERVATION SCREEN TO YOUR EXISTING MENU
-                    _buildDrawerItem(
-                      context,
-                      Icons.visibility, // Using an eye icon for observations
-                      'Project Observations',
-                      () {
-                        Navigator.pop(context);
-                        Navigator.pushNamed(context, '/observations');
-                      },
-                    ),
-
                     _buildDrawerItem(
                       context,
                       Icons.track_changes,

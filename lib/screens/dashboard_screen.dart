@@ -188,7 +188,7 @@ class DashboardScreen extends StatelessWidget {
                         'View your registered projects',
                         Icons.work_outline,
                         () {
-                          Navigator.pushNamed(context, '/project-registration');
+                          Navigator.pushNamed(context, '/projects');
                         },
                       ),
                       _buildFeatureCard(

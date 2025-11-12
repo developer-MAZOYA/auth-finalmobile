@@ -19,7 +19,7 @@ class AppDrawer extends StatelessWidget {
         return Drawer(
           child: Column(
             children: [
-              // Custom User Header
+              // Custom User Header - KEEPING YOUR EXISTING STYLING
               Container(
                 height: 160,
                 width: double.infinity,
@@ -42,7 +42,7 @@ class AppDrawer extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // User Avatar
+                    // User Avatar - KEEPING YOUR EXISTING STYLING
                     CircleAvatar(
                       radius: 30,
                       backgroundColor: Colors.white,
@@ -58,7 +58,7 @@ class AppDrawer extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    // User Info
+                    // User Info - KEEPING YOUR EXISTING STYLING
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,6 +100,7 @@ class AppDrawer extends StatelessWidget {
                 child: ListView(
                   padding: EdgeInsets.zero,
                   children: [
+                    // KEEPING ALL YOUR EXISTING MENU ITEMS
                     _buildDrawerItem(
                       context,
                       Icons.dashboard,
@@ -119,9 +120,21 @@ class AppDrawer extends StatelessWidget {
                       'Project Registred',
                       () {
                         Navigator.pop(context);
-                        Navigator.pushNamed(context, '/project-registred');
+                        Navigator.pushNamed(context, '/projects');
                       },
                     ),
+
+                    // ADDING THE OBSERVATION SCREEN TO YOUR EXISTING MENU
+                    _buildDrawerItem(
+                      context,
+                      Icons.visibility, // Using an eye icon for observations
+                      'Project Observations',
+                      () {
+                        Navigator.pop(context);
+                        Navigator.pushNamed(context, '/observations');
+                      },
+                    ),
+
                     _buildDrawerItem(
                       context,
                       Icons.track_changes,
@@ -153,6 +166,7 @@ class AppDrawer extends StatelessWidget {
                   ],
                 ),
               ),
+              // KEEPING YOUR EXISTING LOGOUT BUTTON
               Container(
                 padding: const EdgeInsets.all(16),
                 child: ElevatedButton.icon(
@@ -175,6 +189,7 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
+  // KEEPING YOUR EXISTING HELPER METHODS
   String _getUserInitials(String name) {
     final names = name.split(' ');
     if (names.length > 1) {

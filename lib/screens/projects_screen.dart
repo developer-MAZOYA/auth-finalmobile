@@ -12,8 +12,6 @@ class ProjectsScreen extends StatefulWidget {
 }
 
 class _ProjectsScreenState extends State<ProjectsScreen> {
-  bool _showObservationForm = false;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,33 +20,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.grey[800],
-        actions: [
-          if (!_showObservationForm)
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () {
-                setState(() {
-                  _showObservationForm = true;
-                });
-              },
-            ),
-        ],
+        // Removed the plus button from app bar
       ),
       drawer: const AppDrawer(),
-      body: _showObservationForm
-          ? AddObservationForm(
-              onSave: () {
-                setState(() {
-                  _showObservationForm = false;
-                });
-              },
-              onCancel: () {
-                setState(() {
-                  _showObservationForm = false;
-                });
-              },
-            )
-          : const ProjectsList(),
+      body: const ProjectsList(),
     );
   }
 }
@@ -138,7 +113,33 @@ class ProjectsList extends StatelessWidget {
             color: Colors.grey,
           ),
         ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Add observation button for this specific project
+            IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(Icons.add, color: Colors.white, size: 16),
+              ),
+              onPressed: () {
+                // Navigate directly to add observation for this specific project
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        AddObservationScreen(project: project),
+                  ),
+                );
+              },
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 16),
+          ],
+        ),
         onTap: () {
           Navigator.push(
             context,
@@ -169,6 +170,20 @@ class ProjectDetailsScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          // Add observation button in project details
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddObservationScreen(project: project),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -228,6 +243,25 @@ class ProjectDetailsScreen extends StatelessWidget {
                         Chip(
                           label: Text('${project.observationCount}'),
                           backgroundColor: Colors.blue[100],
+                        ),
+                        const Spacer(),
+                        // Add observation button in observations section
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    AddObservationScreen(project: project),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.add, size: 16),
+                          label: const Text('Add Observation'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                          ),
                         ),
                       ],
                     ),
@@ -309,6 +343,20 @@ class ProjectDetailsScreen extends StatelessWidget {
                               ),
                               textAlign: TextAlign.center,
                             ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        AddObservationScreen(project: project),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.add),
+                              label: const Text('Add First Observation'),
+                            ),
                           ],
                         ),
                       ),
@@ -366,186 +414,141 @@ class ProjectDetailsScreen extends StatelessWidget {
   }
 }
 
-// AddObservationForm remains exactly the same as before
-class AddObservationForm extends StatefulWidget {
-  final VoidCallback onSave;
-  final VoidCallback onCancel;
+// Updated AddObservationScreen that receives the project directly
+class AddObservationScreen extends StatefulWidget {
+  final Project project;
 
-  const AddObservationForm({
-    super.key,
-    required this.onSave,
-    required this.onCancel,
-  });
+  const AddObservationScreen({super.key, required this.project});
 
   @override
-  State<AddObservationForm> createState() => _AddObservationFormState();
+  State<AddObservationScreen> createState() => _AddObservationScreenState();
 }
 
-class _AddObservationFormState extends State<AddObservationForm> {
+class _AddObservationScreenState extends State<AddObservationScreen> {
   final _formKey = GlobalKey<FormState>();
-  String? _selectedProjectId;
-  Project? _selectedProject;
   List<TextEditingController> _observationControllers = [
     TextEditingController()
   ];
 
   @override
   Widget build(BuildContext context) {
-    final projectProvider = Provider.of<ProjectProvider>(context);
-    final projects = projectProvider.projects;
-
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: widget.onCancel,
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Add New Observations',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Project Dropdown
-            DropdownButtonFormField<String>(
-              value: _selectedProjectId,
-              decoration: const InputDecoration(
-                labelText: 'Select Project',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.work),
-              ),
-              items: projects.map((project) {
-                return DropdownMenuItem<String>(
-                  value: project.id,
-                  child: Text(project.name),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedProjectId = value;
-                  _selectedProject = projects.firstWhere(
-                    (p) => p.id == value,
-                    orElse: () => Project(
-                      id: '',
-                      name: '',
-                      description: '',
-                      region: '',
-                      council: '',
-                      startDate: '',
-                      endDate: '',
-                      createdAt: DateTime.now(),
-                    ),
-                  );
-                });
-              },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please select a project';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            // Project Details Card - Only shows when a project is selected
-            if (_selectedProject != null && _selectedProjectId != null)
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Add Observations'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        foregroundColor: Colors.grey[800],
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Project Details Card - Always shows since project is pre-selected
               _buildProjectDetailsCard(),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
-            // Observation fields
-            const Text(
-              'Observation Issues',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-
-            Expanded(
-              child: ListView.builder(
-                itemCount: _observationControllers.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _observationControllers[index],
-                            decoration: InputDecoration(
-                              labelText: 'Observation ${index + 1}',
-                              border: const OutlineInputBorder(),
-                              suffixIcon: _observationControllers.length > 1
-                                  ? IconButton(
-                                      icon: const Icon(Icons.clear, size: 20),
-                                      onPressed: () {
-                                        setState(() {
-                                          _observationControllers
-                                              .removeAt(index);
-                                        });
-                                      },
-                                    )
-                                  : null,
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Enter an observation';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+              // Observation fields
+              const Text(
+                'Observation Issues',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-            ),
+              const SizedBox(height: 16),
+              const Text(
+                'Enter the observation details for this project:',
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
 
-            const SizedBox(height: 10),
-
-            // Add issue button
-            ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  _observationControllers.add(TextEditingController());
-                });
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Add Another Observation'),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Action buttons
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: widget.onCancel,
-                    child: const Text('Cancel'),
-                  ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _observationControllers.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _observationControllers[index],
+                              decoration: InputDecoration(
+                                labelText: 'Observation ${index + 1}',
+                                border: const OutlineInputBorder(),
+                                suffixIcon: _observationControllers.length > 1
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear, size: 20),
+                                        onPressed: () {
+                                          setState(() {
+                                            _observationControllers
+                                                .removeAt(index);
+                                          });
+                                        },
+                                      )
+                                    : null,
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Enter an observation';
+                                }
+                                return null;
+                              },
+                              maxLines: 3,
+                              minLines: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _saveObservations,
-                    child: const Text('Save Observations'),
-                  ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Add issue button
+              ElevatedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _observationControllers.add(TextEditingController());
+                  });
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Add Another Observation'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[100],
+                  foregroundColor: Colors.grey[800],
                 ),
-              ],
-            ),
-          ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // Action buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _saveObservations,
+                      child: const Text('Save Observations'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -561,63 +564,43 @@ class _AddObservationFormState extends State<AddObservationForm> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Project Details',
+              'Adding observations to:',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 14,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.project.name,
+              style: const TextStyle(
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.blue,
               ),
             ),
             const SizedBox(height: 12),
 
-            // Project Name
-            _buildDetailRow('Project Name:', _selectedProject!.name),
-            const SizedBox(height: 8),
-
-            // Description
-            if (_selectedProject!.description.isNotEmpty)
-              Column(
-                children: [
-                  _buildDetailRow(
-                      'Description:', _selectedProject!.description),
-                  const SizedBox(height: 8),
-                ],
-              ),
-
-            // Region and Council in a row
-            Row(
+            // Project details in a compact format
+            Wrap(
+              spacing: 16,
+              runSpacing: 8,
               children: [
-                Expanded(
-                  child: _buildDetailRow('Region:', _selectedProject!.region),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildDetailRow('Council:', _selectedProject!.council),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Start and End Date in a row
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDetailRow(
-                      'Start Date:', _formatDate(_selectedProject!.startDate)),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildDetailRow(
-                      'End Date:', _formatDate(_selectedProject!.endDate)),
-                ),
+                _buildCompactDetail('Region:', widget.project.region),
+                _buildCompactDetail('Council:', widget.project.council),
+                _buildCompactDetail(
+                    'Start:', _formatDate(widget.project.startDate)),
+                _buildCompactDetail(
+                    'End:', _formatDate(widget.project.endDate)),
+                _buildCompactDetail('Current Observations:',
+                    '${widget.project.observationCount}'),
               ],
             ),
 
-            // Existing observations count
-            if (_selectedProject!.hasObservations) ...[
+            if (widget.project.description.isNotEmpty) ...[
               const SizedBox(height: 8),
-              _buildDetailRow('Current Observations:',
-                  '${_selectedProject!.observationCount} observations'),
+              _buildCompactDetail('Description:', widget.project.description),
             ],
           ],
         ),
@@ -625,27 +608,20 @@ class _AddObservationFormState extends State<AddObservationForm> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Colors.grey,
-            fontWeight: FontWeight.w500,
-          ),
+  Widget _buildCompactDetail(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        '$label $value',
+        style: const TextStyle(
+          fontSize: 12,
+          color: Colors.grey,
         ),
-        const SizedBox(height: 2),
-        Text(
-          value.isNotEmpty ? value : 'Not specified',
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -662,16 +638,6 @@ class _AddObservationFormState extends State<AddObservationForm> {
 
   void _saveObservations() {
     if (_formKey.currentState!.validate()) {
-      if (_selectedProject == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a project first.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
       final observations = _observationControllers
           .map((controller) => controller.text.trim())
           .where((obs) => obs.isNotEmpty)
@@ -690,18 +656,17 @@ class _AddObservationFormState extends State<AddObservationForm> {
       // Save observations using the provider
       final projectProvider =
           Provider.of<ProjectProvider>(context, listen: false);
-      projectProvider.addObservationsToProject(
-          _selectedProject!.id, observations);
+      projectProvider.addObservationsToProject(widget.project.id, observations);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              '${observations.length} observations saved for ${_selectedProject!.name}'),
+              '${observations.length} observations saved for ${widget.project.name}'),
           backgroundColor: Colors.green,
         ),
       );
 
-      widget.onSave();
+      Navigator.pop(context);
     }
   }
 

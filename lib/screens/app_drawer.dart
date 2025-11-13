@@ -125,6 +125,15 @@ class AppDrawer extends StatelessWidget {
                     ),
                     _buildDrawerItem(
                       context,
+                      Icons.drafts,
+                      'Draft Reports',
+                      () {
+                        Navigator.pop(context);
+                        Navigator.pushNamed(context, '/drafts');
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context,
                       Icons.track_changes,
                       'Daily Track Report',
                       () {

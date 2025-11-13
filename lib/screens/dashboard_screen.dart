@@ -103,8 +103,8 @@ class DashboardScreen extends StatelessWidget {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Color(0xFF667eea),
-                            Color.fromARGB(255, 114, 162, 75),
+                            Color.fromARGB(255, 56, 78, 173),
+                            Color.fromARGB(255, 102, 171, 45),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(16.0),
@@ -113,7 +113,7 @@ class DashboardScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Welcome To Rise Dashboard!',
+                            'Welcome to Rise Site Monitoring Application',
                             style: Theme.of(context)
                                 .textTheme
                                 .headlineSmall
@@ -123,13 +123,13 @@ class DashboardScreen extends StatelessWidget {
                                 ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            'Welcome to Rise Site Monitoring Application',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 16,
-                            ),
-                          ),
+                          // Text(
+                          //   'Welcome to Rise Site Monitoring Application',
+                          //   style: TextStyle(
+                          //     color: Colors.white.withOpacity(0.9),
+                          //     fontSize: 16,
+                          //   ),
+                          // ),
                         ],
                       ),
                     ),
@@ -207,7 +207,7 @@ class DashboardScreen extends StatelessWidget {
                             backgroundColor: Colors.green,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
+                                horizontal: 12, vertical: 7),
                           ),
                           onPressed: () => _syncDrafts(context),
                         ),
@@ -220,9 +220,9 @@ class DashboardScreen extends StatelessWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.4,
+                    crossAxisSpacing: 15,
+                    mainAxisSpacing: 15,
+                    childAspectRatio: 1.3,
                     children: [
                       _buildFeatureCard(
                         context,

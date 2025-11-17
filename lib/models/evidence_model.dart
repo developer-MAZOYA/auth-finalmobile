@@ -6,6 +6,10 @@ class Evidence {
   final String address;
   final DateTime timestamp;
   final String? description;
+  final double? accuracy;
+  final double? altitude;
+  final double? altitudeAccuracy;
+  final String? projectId;
 
   Evidence({
     required this.id,
@@ -15,7 +19,27 @@ class Evidence {
     required this.address,
     required this.timestamp,
     this.description,
+    this.accuracy,
+    this.altitude,
+    this.altitudeAccuracy,
+    this.projectId,
   });
+
+  // Convert to GraphQL input format
+  Map<String, dynamic> toGraphQLInput() {
+    return {
+      'imagePath': imagePath,
+      'latitude': latitude,
+      'longitude': longitude,
+      'address': address,
+      'timestamp': timestamp.toIso8601String(),
+      'description': description,
+      'accuracy': accuracy,
+      'altitude': altitude,
+      'altitudeAccuracy': altitudeAccuracy,
+      'projectId': projectId,
+    };
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -26,6 +50,10 @@ class Evidence {
       'address': address,
       'timestamp': timestamp.toIso8601String(),
       'description': description,
+      'accuracy': accuracy,
+      'altitude': altitude,
+      'altitudeAccuracy': altitudeAccuracy,
+      'projectId': projectId,
     };
   }
 
@@ -39,6 +67,10 @@ class Evidence {
       timestamp:
           DateTime.parse(map['timestamp'] ?? DateTime.now().toIso8601String()),
       description: map['description'],
+      accuracy: map['accuracy'],
+      altitude: map['altitude'],
+      altitudeAccuracy: map['altitudeAccuracy'],
+      projectId: map['projectId'],
     );
   }
 }

@@ -256,8 +256,8 @@ class ProjectDetailsScreen extends StatelessWidget {
                               ),
                             );
                           },
-                          icon: const Icon(Icons.add, size: 16),
-                          label: const Text('Add Observation'),
+                          icon: const Icon(Icons.add, size: 14),
+                          label: const Text('Add'),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 8),

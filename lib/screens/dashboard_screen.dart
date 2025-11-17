@@ -226,12 +226,12 @@ class DashboardScreen extends StatelessWidget {
                     children: [
                       _buildFeatureCard(
                         context,
-                        'Draft Reports',
-                        '${draftProvider.draftCount} reports pending sync',
-                        Icons.drafts,
-                        Colors.orange,
+                        'My Activities',
+                        'View your registered projects',
+                        Icons.work_outline,
+                        Colors.green,
                         () {
-                          Navigator.pushNamed(context, '/drafts');
+                          Navigator.pushNamed(context, '/projects');
                         },
                       ),
                       _buildFeatureCard(
@@ -246,12 +246,12 @@ class DashboardScreen extends StatelessWidget {
                       ),
                       _buildFeatureCard(
                         context,
-                        'My Projects',
-                        'View your registered projects',
-                        Icons.work_outline,
-                        Colors.green,
+                        'Draft Reports',
+                        '${draftProvider.draftCount} reports pending sync',
+                        Icons.drafts,
+                        Colors.orange,
                         () {
-                          Navigator.pushNamed(context, '/projects');
+                          Navigator.pushNamed(context, '/drafts');
                         },
                       ),
                       _buildFeatureCard(

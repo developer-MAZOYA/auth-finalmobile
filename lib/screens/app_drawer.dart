@@ -117,7 +117,7 @@ class AppDrawer extends StatelessWidget {
                     _buildDrawerItem(
                       context,
                       Icons.work,
-                      'Project Registred',
+                      'Activities Registred',
                       () {
                         Navigator.pop(context);
                         Navigator.pushNamed(context, '/projects');

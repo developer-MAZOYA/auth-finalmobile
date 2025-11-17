@@ -16,7 +16,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Projects'),
+        title: const Text('Activity'), // Changed from 'Projects'
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.grey[800],
@@ -42,12 +42,12 @@ class ProjectsList extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Projects',
+            'Activity', // Changed from 'Projects'
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
-            '${projects.length} project${projects.length != 1 ? 's' : ''}',
+            '${projects.length} activit${projects.length != 1 ? 'ies' : 'y'}', // Changed from 'projects'
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[600],
@@ -63,7 +63,7 @@ class ProjectsList extends StatelessWidget {
                         Icon(Icons.work_outline, size: 64, color: Colors.grey),
                         SizedBox(height: 16),
                         Text(
-                          'No projects available',
+                          'No activities available', // Changed from 'No projects available'
                           style: TextStyle(fontSize: 16, color: Colors.grey),
                         ),
                       ],
@@ -190,7 +190,7 @@ class ProjectDetailsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Project Details Card
+            // Activity Details Card - Changed from 'Project Details'
             Card(
               elevation: 4,
               child: Padding(
@@ -199,7 +199,7 @@ class ProjectDetailsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Project Details',
+                      'Activity Details', // Changed from 'Project Details'
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -450,7 +450,7 @@ class _AddObservationScreenState extends State<AddObservationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Project Details Card - Always shows since project is pre-selected
+              // Activity Details Card - Changed from 'Project Details'
               _buildProjectDetailsCard(),
 
               const SizedBox(height: 24),
@@ -462,7 +462,7 @@ class _AddObservationScreenState extends State<AddObservationScreen> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'Enter the observation details for this project:',
+                'Enter the observation details for this activity:', // Changed from 'project'
                 style: TextStyle(color: Colors.grey),
               ),
               const SizedBox(height: 16),
@@ -564,7 +564,7 @@ class _AddObservationScreenState extends State<AddObservationScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Adding observations to:',
+              'Adding observations to:', // Changed from 'Adding observations to project:'
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey,
@@ -582,7 +582,7 @@ class _AddObservationScreenState extends State<AddObservationScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Project details in a compact format
+            // Activity details in a compact format - Changed from 'Project details'
             Wrap(
               spacing: 16,
               runSpacing: 8,

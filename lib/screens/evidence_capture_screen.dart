@@ -10,12 +10,16 @@ import '../providers/evidence_provider.dart';
 
 class EvidenceCaptureScreen extends StatefulWidget {
   final Activity activity;
-  final String observationText;
+  final int observationId;
+  final String observationName;
+  final int userId;
 
   const EvidenceCaptureScreen({
     super.key,
     required this.activity,
-    required this.observationText,
+    required this.observationId,
+    required this.observationName,
+    required this.userId,
   });
 
   @override
@@ -33,12 +37,28 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
   String _locationError = '';
 
   List<File> _capturedImages = [];
+  final TextEditingController _observationTextController =
+      TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _observationTextController.text = widget.observationName;
+  }
+
+  @override
+  void dispose() {
+    _observationTextController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final evidenceProvider = Provider.of<EvidenceProvider>(context);
-    final existingEvidenceCount =
-        evidenceProvider.getEvidenceCountForObservation(widget.observationText);
+    final remainingImages = _maxImages - _capturedImages.length;
+    final canTakeMoreImages = remainingImages > 0;
+    final hasLocation =
+        _currentLocation.isNotEmpty && _currentLocation['success'] == true;
+    final hasMinimumImages = _capturedImages.length >= _minImages;
 
     return Scaffold(
       appBar: AppBar(
@@ -53,11 +73,15 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Observation Info Card
-            _buildObservationInfoCard(existingEvidenceCount),
+            _buildObservationInfoCard(),
             const SizedBox(height: 20),
 
             // Location Section
             _buildLocationSection(),
+            const SizedBox(height: 20),
+
+            // Observation Text Field
+            _buildObservationTextField(),
             const SizedBox(height: 20),
 
             // Image Capture Section
@@ -69,14 +93,15 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
             const SizedBox(height: 20),
 
             // Submit Button
-            _buildSubmitButton(),
+            if (_capturedImages.isNotEmpty)
+              _buildSubmitButton(hasLocation, hasMinimumImages),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildObservationInfoCard(int existingEvidenceCount) {
+  Widget _buildObservationInfoCard() {
     return Card(
       elevation: 4,
       color: Colors.blue[50],
@@ -115,21 +140,43 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.grey[300]!),
               ),
-              child: Text(
-                'Observation: ${widget.observationText}',
-                style: const TextStyle(fontSize: 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Observation:',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  Text(
+                    widget.observationName,
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              'Images in this evidence: ${_capturedImages.length}/$_maxImages',
-              style: TextStyle(
-                fontSize: 14,
-                color: _capturedImages.length >= _minImages
-                    ? Colors.green
-                    : Colors.orange,
-                fontWeight: FontWeight.w500,
-              ),
+            Row(
+              children: [
+                Icon(
+                  Icons.photo_library,
+                  size: 16,
+                  color: _capturedImages.length >= _minImages
+                      ? Colors.green
+                      : Colors.orange,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Images: ${_capturedImages.length}/$_maxImages',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: _capturedImages.length >= _minImages
+                        ? Colors.green
+                        : Colors.orange,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
             if (_capturedImages.length < _minImages) ...[
               const SizedBox(height: 4),
@@ -198,6 +245,51 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
                 _currentLocation['success'] == true)
               _buildLocationInfo(),
             if (_locationError.isNotEmpty) _buildLocationError(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildObservationTextField() {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.description, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Observation Details',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Add additional details about this observation (optional)',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _observationTextController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Observation Text',
+                hintText: 'Enter additional details about this observation...',
+              ),
+            ),
           ],
         ),
       ),
@@ -460,7 +552,7 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              '${_capturedImages.length} photos ready for submission in one evidence record',
+              '${_capturedImages.length} photos ready for submission',
               style: const TextStyle(
                 fontSize: 14,
                 color: Colors.grey,
@@ -549,16 +641,7 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
     );
   }
 
-  Widget _buildSubmitButton() {
-    final hasMinimumImages = _capturedImages.length >= _minImages;
-    final hasLocation =
-        _currentLocation.isNotEmpty && _currentLocation['success'] == true;
-    final hasImages = _capturedImages.isNotEmpty;
-
-    if (!hasImages) {
-      return Container();
-    }
-
+  Widget _buildSubmitButton(bool hasLocation, bool hasMinimumImages) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -782,30 +865,38 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
       final evidenceProvider =
           Provider.of<EvidenceProvider>(context, listen: false);
 
-      // Create ONE evidence record with MULTIPLE images
-      final evidenceRequest = EvidenceRequest(
-        activityId: widget.activity.activityTitle,
-        observationId: widget.observationText,
-        imagePaths: _capturedImages
-            .map((file) => file.path)
-            .toList(), // All images in one request
-        latitude: _currentLocation['latitude'],
-        longitude: _currentLocation['longitude'],
-        address: _currentLocation['address'],
-        accuracy: _currentLocation['accuracy']?.toDouble() ?? 0.0,
-        altitude: _currentLocation['altitude']?.toDouble(),
-        altitudeAccuracy: _currentLocation['speedAccuracy']?.toDouble(),
-      );
+      // For each image, create a separate evidence record
+      for (final imageFile in _capturedImages) {
+        final evidenceRequest = EvidenceRequest(
+          activityId: widget.activity.activityId.toString(),
+          observationId: widget.observationId.toString(),
+          imagePaths: [imageFile.path], // Single image path in list
+          latitude: _currentLocation['latitude'],
+          longitude: _currentLocation['longitude'],
+          address: _currentLocation['address'],
+          accuracy: _currentLocation['accuracy']?.toDouble() ?? 0.0,
+          altitude: _currentLocation['altitude']?.toDouble(),
+          altitudeAccuracy: _currentLocation['speedAccuracy']?.toDouble(),
+          observationText: _observationTextController.text.isNotEmpty
+              ? _observationTextController.text
+              : widget.observationName,
+        );
 
-      final evidence = await EvidenceApiService.createEvidence(evidenceRequest);
+        final evidence = await EvidenceApiService.createEvidence(
+          widget.userId,
+          int.parse(widget.activity.activityId.toString()),
+          widget.observationId,
+          evidenceRequest,
+        );
 
-      // Add to provider
-      evidenceProvider.addEvidence(evidence);
+        // Add to provider
+        evidenceProvider.addEvidence(evidence);
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              '✅ Successfully submitted evidence with ${_capturedImages.length} images'),
+              '✅ Successfully submitted ${_capturedImages.length} evidence records'),
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 3),
         ),
@@ -826,10 +917,5 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
         _isSubmitting = false;
       });
     }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 }

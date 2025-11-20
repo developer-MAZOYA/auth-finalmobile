@@ -8,12 +8,16 @@ import 'evidence_capture_screen.dart';
 
 class EvidenceListScreen extends StatefulWidget {
   final Activity activity;
-  final String observationText;
+  final int observationId;
+  final String observationName;
+  final int userId;
 
   const EvidenceListScreen({
     super.key,
     required this.activity,
-    required this.observationText,
+    required this.observationId,
+    required this.observationName,
+    required this.userId,
   });
 
   @override
@@ -24,11 +28,13 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
   List<Evidence> _evidenceList = [];
   bool _isLoading = true;
   String _error = '';
+  Map<String, dynamic>? _complianceData;
 
   @override
   void initState() {
     super.initState();
     _loadEvidence();
+    _loadCompliance();
   }
 
   Future<void> _loadEvidence() async {
@@ -38,16 +44,17 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
         _error = '';
       });
 
-      // Load evidence for this observation
-      final evidence = await EvidenceApiService.getEvidenceByObservation(
-          widget.observationText);
+      final evidence = await EvidenceApiService.getEvidencesForObservation(
+        widget.userId,
+        int.parse(widget.activity.activityId as String),
+        widget.observationId,
+      );
 
       setState(() {
         _evidenceList = evidence;
         _isLoading = false;
       });
 
-      // Update provider
       final evidenceProvider =
           Provider.of<EvidenceProvider>(context, listen: false);
       evidenceProvider.setEvidence(evidence);
@@ -59,6 +66,83 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
     }
   }
 
+  Future<void> _loadCompliance() async {
+    try {
+      final compliance = await EvidenceApiService.validateCompliance(
+        widget.userId,
+        int.parse(widget.activity.activityId as String),
+        widget.observationId,
+      );
+      setState(() {
+        _complianceData = compliance['compliance'];
+      });
+    } catch (e) {
+      print('Failed to load compliance: $e');
+    }
+  }
+
+  Future<void> _deleteEvidence(String evidenceId) async {
+    try {
+      await EvidenceApiService.deleteEvidence(
+        widget.userId,
+        int.parse(widget.activity.activityId as String),
+        widget.observationId,
+        int.parse(evidenceId),
+      );
+
+      // Remove from local list
+      setState(() {
+        _evidenceList
+            .removeWhere((evidence) => evidence.evidenceId == evidenceId);
+      });
+
+      // Update provider
+      final evidenceProvider =
+          Provider.of<EvidenceProvider>(context, listen: false);
+      evidenceProvider.removeEvidence(evidenceId);
+
+      // Reload compliance
+      _loadCompliance();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Evidence deleted successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete evidence: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showDeleteConfirmation(String evidenceId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Evidence'),
+        content: const Text('Are you sure you want to delete this evidence?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteEvidence(evidenceId);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,6 +151,12 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.grey[800],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadEvidence,
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToEvidenceCapture,
@@ -111,7 +201,7 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Observation: ${widget.observationText}',
+              'Observation: ${widget.observationName}',
               style: const TextStyle(
                 fontSize: 14,
                 color: Colors.grey,
@@ -126,8 +216,65 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
                 fontWeight: FontWeight.w500,
               ),
             ),
+            const SizedBox(height: 8),
+            if (_complianceData != null) _buildComplianceStatus(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildComplianceStatus() {
+    final isCompliant = _complianceData!['isCompliant'] ?? false;
+    final message = _complianceData!['message'] ?? '';
+    final totalImages = _complianceData!['totalImages'] ?? 0;
+    final hasMinimumImages = _complianceData!['hasMinimumImages'] ?? false;
+    final hasMaximumImages = _complianceData!['hasMaximumImages'] ?? false;
+    final hasValidLocations = _complianceData!['hasValidLocations'] ?? false;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isCompliant ? Colors.green[50] : Colors.orange[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isCompliant ? Colors.green : Colors.orange,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isCompliant ? Icons.check_circle : Icons.warning,
+                color: isCompliant ? Colors.green : Colors.orange,
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isCompliant ? 'Compliant' : 'Not Compliant',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isCompliant ? Colors.green : Colors.orange,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            message,
+            style: TextStyle(
+              fontSize: 12,
+              color: isCompliant ? Colors.green : Colors.orange,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Images: $totalImages/5 | Min: ${hasMinimumImages ? '✓' : '✗'} | Max: ${hasMaximumImages ? '✓' : '✗'} | Location: ${hasValidLocations ? '✓' : '✗'}',
+            style: const TextStyle(fontSize: 10, color: Colors.grey),
+          ),
+        ],
       ),
     );
   }
@@ -226,7 +373,6 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
         itemBuilder: (context, index) {
           final date = sortedDates[index];
           final dailyEvidence = evidenceByDate[date]!;
-
           return _buildDateSection(date, dailyEvidence);
         },
       ),
@@ -237,7 +383,6 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Date Header
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Text(
@@ -249,10 +394,7 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
             ),
           ),
         ),
-
-        // Evidence Items for this date
         ...dailyEvidence.map((evidence) => _buildEvidenceItem(evidence)),
-
         const SizedBox(height: 16),
       ],
     );
@@ -270,7 +412,18 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
             color: Colors.grey[200],
             borderRadius: BorderRadius.circular(8),
           ),
-          child: const Icon(Icons.photo, color: Colors.grey),
+          child: evidence.hasImages
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    evidence.imagePaths.first,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.photo, color: Colors.grey);
+                    },
+                  ),
+                )
+              : const Icon(Icons.photo, color: Colors.grey),
         ),
         title: Text(
           _formatTime(evidence.timestamp),
@@ -281,16 +434,43 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text('Images: ${evidence.imageCount}'),
             Text('Location: ${evidence.address}'),
-            Text(
-                'Coordinates: ${evidence.latitude.toStringAsFixed(6)}, ${evidence.longitude.toStringAsFixed(6)}'),
+            Text('Accuracy: ${evidence.accuracy.toStringAsFixed(2)}m'),
           ],
         ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () {
-          // TODO: Show evidence details
-          _showEvidenceDetails(evidence);
-        },
+        trailing: PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'delete') {
+              _showDeleteConfirmation(evidence.evidenceId);
+            } else if (value == 'view') {
+              _showEvidenceDetails(evidence);
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'view',
+              child: Row(
+                children: [
+                  Icon(Icons.visibility, size: 20),
+                  SizedBox(width: 8),
+                  Text('View Details'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete, size: 20, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Delete', style: TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        onTap: () => _showEvidenceDetails(evidence),
       ),
     );
   }
@@ -301,12 +481,14 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
       MaterialPageRoute(
         builder: (context) => EvidenceCaptureScreen(
           activity: widget.activity,
-          observationText: widget.observationText,
+          observationId: widget.observationId,
+          observationName: widget.observationName,
+          userId: widget.userId,
         ),
       ),
     ).then((_) {
-      // Refresh evidence list when returning from capture screen
       _loadEvidence();
+      _loadCompliance();
     });
   }
 
@@ -321,12 +503,24 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('Time: ${_formatDateTime(evidence.timestamp)}'),
+              const SizedBox(height: 8),
+              Text('Images: ${evidence.imageCount}'),
+              const SizedBox(height: 8),
               Text('Address: ${evidence.address}'),
+              const SizedBox(height: 8),
               Text('Latitude: ${evidence.latitude.toStringAsFixed(6)}'),
+              const SizedBox(height: 8),
               Text('Longitude: ${evidence.longitude.toStringAsFixed(6)}'),
+              const SizedBox(height: 8),
               Text('Accuracy: ${evidence.accuracy.toStringAsFixed(2)}m'),
-              if (evidence.altitude != null)
+              if (evidence.altitude != null) ...[
+                const SizedBox(height: 8),
                 Text('Altitude: ${evidence.altitude!.toStringAsFixed(2)}m'),
+              ],
+              if (evidence.observationText != null) ...[
+                const SizedBox(height: 8),
+                Text('Observation: ${evidence.observationText}'),
+              ],
             ],
           ),
         ),

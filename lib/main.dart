@@ -4,6 +4,7 @@ import 'providers/activity_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/draft_provider.dart';
 import 'providers/observation_provider.dart';
+import 'providers/evidence_provider.dart'; // ADD THIS IMPORT
 import 'screens/draft_reports_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -33,6 +34,8 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
+        ChangeNotifierProvider(
+            create: (context) => EvidenceProvider()), // ADD THIS LINE
       ],
       child: MaterialApp(
         title: "TRR Site Report",

@@ -31,13 +31,41 @@ class ObservationProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      print('🔵 FETCHING OBSERVATIONS for activity: $activityId');
-      _observations = await apiService.getObservationsByActivity(activityId);
       print(
-          '✅ OBSERVATIONS LOADED: ${_observations?.observations.length} items');
-    } catch (e) {
-      _errorMessage = e.toString();
-      print('❌ ERROR LOADING OBSERVATIONS: $e');
+          '🔵 [ObservationProvider] FETCHING OBSERVATIONS for activity: $activityId');
+      print(
+          '🔵 [ObservationProvider] API Service type: ${apiService.runtimeType}');
+
+      // Call the API service
+      _observations = await apiService.getObservationsByActivity(activityId);
+
+      print('✅ [ObservationProvider] OBSERVATIONS RESPONSE RECEIVED');
+      print('✅ [ObservationProvider] Response object: $_observations');
+      print(
+          '✅ [ObservationProvider] Observations list: ${_observations?.observations}');
+      print(
+          '✅ [ObservationProvider] Observations count: ${_observations?.observations?.length ?? 0}');
+
+      // Debug each observation
+      if (_observations?.observations != null) {
+        for (int i = 0; i < _observations!.observations!.length; i++) {
+          final observation = _observations!.observations![i];
+          print(
+              '   📝 [ObservationProvider] Observation $i: "$observation" (type: ${observation.runtimeType})');
+
+          // Check for null values
+          if (observation == null) {
+            print(
+                '   ⚠️ [ObservationProvider] WARNING: Observation $i is NULL!');
+          }
+        }
+      } else {
+        print('❌ [ObservationProvider] OBSERVATIONS LIST IS NULL');
+      }
+    } catch (e, stackTrace) {
+      _errorMessage = 'Failed to load observations: ${e.toString()}';
+      print('❌ [ObservationProvider] ERROR LOADING OBSERVATIONS: $e');
+      print('❌ [ObservationProvider] STACK TRACE: $stackTrace');
     } finally {
       _isLoading = false;
       notifyListeners();

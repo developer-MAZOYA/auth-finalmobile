@@ -46,7 +46,7 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
 
       final evidence = await EvidenceApiService.getEvidencesForObservation(
         widget.userId,
-        int.parse(widget.activity.activityId as String),
+        widget.activity.activityId,
         widget.observationId,
       );
 
@@ -70,7 +70,7 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
     try {
       final compliance = await EvidenceApiService.validateCompliance(
         widget.userId,
-        int.parse(widget.activity.activityId as String),
+        widget.activity.activityId,
         widget.observationId,
       );
       setState(() {
@@ -85,7 +85,7 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
     try {
       await EvidenceApiService.deleteEvidence(
         widget.userId,
-        int.parse(widget.activity.activityId as String),
+        widget.activity.activityId,
         widget.observationId,
         int.parse(evidenceId),
       );

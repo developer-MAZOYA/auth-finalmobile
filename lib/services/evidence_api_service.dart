@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/evidence_model.dart';
 
 class EvidenceApiService {
-  static const String baseUrl = 'http://10.0.2.2:8080/api';
+  static const String baseUrl = 'http://192.168.0.103:8080/api';
 
   // Get user's assigned activities with observations
   static Future<List<dynamic>> getUserAssignedActivities(int userId) async {

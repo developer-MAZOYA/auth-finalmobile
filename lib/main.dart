@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) => ObservationProvider(
             apiService: ApiService(
-              baseUrl: 'http://10.0.2.2:8080/api/observations',
+              baseUrl: 'http://192.168.0.103:8080/api/observations',
             ),
           ),
         ),

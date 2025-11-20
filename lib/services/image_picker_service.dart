@@ -4,7 +4,28 @@ import 'dart:io';
 class ImagePickerService {
   static final ImagePicker _picker = ImagePicker();
 
-  // Take multiple pictures sequentially
+  // Take single picture using camera
+  static Future<File?> takePicture() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 90,
+        preferredCameraDevice: CameraDevice.rear,
+      );
+
+      if (image != null) {
+        return File(image.path);
+      }
+      return null;
+    } catch (e) {
+      print('Error taking picture: $e');
+      return null;
+    }
+  }
+
+  // Take multiple pictures sequentially using camera
   static Future<List<File>> takeMultiplePictures(int count) async {
     List<File> images = [];
 
@@ -15,6 +36,7 @@ class ImagePickerService {
           maxWidth: 1920,
           maxHeight: 1080,
           imageQuality: 90,
+          preferredCameraDevice: CameraDevice.rear,
         );
 
         if (image != null) {

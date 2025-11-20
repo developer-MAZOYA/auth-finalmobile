@@ -227,11 +227,11 @@ class DashboardScreen extends StatelessWidget {
                       _buildFeatureCard(
                         context,
                         'My Activities',
-                        'View your registered projects',
+                        'View your registered activities',
                         Icons.work_outline,
                         Colors.green,
                         () {
-                          Navigator.pushNamed(context, '/projects');
+                          Navigator.pushNamed(context, '/activity');
                         },
                       ),
                       _buildFeatureCard(

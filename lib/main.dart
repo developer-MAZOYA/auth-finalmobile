@@ -1,14 +1,16 @@
-import 'package:auth_final/screens/projects_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'providers/activity_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/draft_provider.dart';
-import 'providers/project_provider.dart';
+import 'providers/observation_provider.dart';
 import 'screens/draft_reports_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/daily_track_screen.dart';
 import 'screens/reports_screen.dart';
+import 'screens/activities_screen.dart';
+import 'services/api_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -22,8 +24,15 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => AuthProvider()),
-        ChangeNotifierProvider(create: (context) => ProjectProvider()),
+        ChangeNotifierProvider(create: (context) => ActivityProvider()),
         ChangeNotifierProvider(create: (_) => DraftProvider()),
+        ChangeNotifierProvider(
+          create: (context) => ObservationProvider(
+            apiService: ApiService(
+              baseUrl: 'http://10.0.2.2:8080/api/observations',
+            ),
+          ),
+        ),
       ],
       child: MaterialApp(
         title: "TRR Site Report",
@@ -36,9 +45,17 @@ class MyApp extends StatelessWidget {
           '/login': (context) => const LoginScreen(),
           '/dashboard': (context) => const DashboardScreen(),
           '/daily-track': (context) => const DailyTrackScreen(),
-          '/projects': (context) => ProjectsScreen(),
+          '/activities': (context) => const ActivitiesScreen(), // Fixed route
           '/drafts': (context) => const DraftReportsScreen(),
           '/reports': (context) => const ReportsScreen(),
+        },
+        onGenerateRoute: (settings) {
+          // Handle unknown routes
+          if (settings.name == '/activity') {
+            return MaterialPageRoute(
+                builder: (context) => const ActivitiesScreen());
+          }
+          return null;
         },
       ),
     );

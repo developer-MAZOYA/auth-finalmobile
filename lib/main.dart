@@ -4,7 +4,7 @@ import 'providers/activity_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/draft_provider.dart';
 import 'providers/observation_provider.dart';
-import 'providers/evidence_provider.dart'; // ADD THIS IMPORT
+import 'providers/evidence_provider.dart';
 import 'screens/draft_reports_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -30,12 +30,11 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) => ObservationProvider(
             apiService: ApiService(
-              baseUrl: 'http://192.168.0.103:8080/api/observations',
+              baseUrl: 'http://192.168.1.190:8080/api/observations',
             ),
           ),
         ),
-        ChangeNotifierProvider(
-            create: (context) => EvidenceProvider()), // ADD THIS LINE
+        ChangeNotifierProvider(create: (context) => EvidenceProvider()),
       ],
       child: MaterialApp(
         title: "TRR Site Report",

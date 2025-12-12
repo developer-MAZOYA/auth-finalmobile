@@ -6,7 +6,7 @@ import '../models/evidence_model.dart';
 import 'image_picker_service.dart';
 
 class EvidenceApiService {
-  static const String baseUrl = 'http://192.168.1.190:8080/api';
+  static const String baseUrl = 'http://10.0.2.2:8080/api';
 
   // ============ MAIN EVIDENCE CREATION METHOD ============
 

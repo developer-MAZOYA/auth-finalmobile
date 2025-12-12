@@ -1319,53 +1319,69 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
       _isSubmitting = true;
     });
 
+    print('🚀 Starting evidence submission...');
+    print('📸 Images to upload: ${_capturedImages.length}');
+    print(
+        '📍 Location: ${_currentLocation['latitude']}, ${_currentLocation['longitude']}');
+    print('🌐 Using endpoint: createEvidenceWithImageUpload');
+
     try {
       final evidenceProvider =
           Provider.of<EvidenceProvider>(context, listen: false);
 
-      // For each image, create a separate evidence record
-      for (final imageFile in _capturedImages) {
-        final evidenceRequest = EvidenceRequest(
-          activityId: widget.activity.activityId.toString(),
-          observationId: widget.observationId.toString(),
-          imagePaths: [imageFile.path], // Single image path in list
-          latitude: _currentLocation['latitude'],
-          longitude: _currentLocation['longitude'],
-          address: _currentLocation['address'],
-          accuracy: _currentLocation['accuracy']?.toDouble() ?? 0.0,
-          altitude: _currentLocation['altitude']?.toDouble(),
-          altitudeAccuracy: _currentLocation['speedAccuracy']?.toDouble(),
-          observationText: _observationTextController.text.isNotEmpty
-              ? _observationTextController.text
-              : widget.observationName,
-        );
+      // ✅ CORRECT: Use createEvidenceWithImageUpload (sends files via multipart)
+      final evidence = await EvidenceApiService.createEvidenceWithImageUpload(
+        userId: widget.userId,
+        activityId: int.parse(widget.activity.activityId.toString()),
+        observationId: widget.observationId,
+        imageFiles: _capturedImages, // Send ALL images at once
+        latitude: _currentLocation['latitude'],
+        longitude: _currentLocation['longitude'],
+        address: _currentLocation['address'],
+        accuracy: _currentLocation['accuracy']?.toDouble() ?? 0.0,
+        altitude: _currentLocation['altitude']?.toDouble(),
+        altitudeAccuracy: _currentLocation['speedAccuracy']?.toDouble(),
+        observationText: _observationTextController.text.isNotEmpty
+            ? _observationTextController.text
+            : widget.observationName,
+      );
 
-        final evidence = await EvidenceApiService.createEvidence(
-          widget.userId,
-          int.parse(widget.activity.activityId.toString()),
-          widget.observationId,
-          evidenceRequest,
-        );
+      // Add to provider
+      evidenceProvider.addEvidence(evidence);
 
-        // Add to provider
-        evidenceProvider.addEvidence(evidence);
-      }
+      print('✅ Evidence created successfully: ID ${evidence.evidenceId}');
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              '✅ Successfully submitted ${_capturedImages.length} evidence records'),
+              '✅ Successfully submitted evidence with ${_capturedImages.length} images'),
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 3),
         ),
       );
 
       // Navigate back to evidence list
+      await Future.delayed(const Duration(seconds: 2));
       Navigator.pop(context);
     } catch (e) {
+      print('❌ Error details: $e');
+
+      String errorMessage = 'Failed to submit evidence';
+      if (e.toString().contains('400')) {
+        errorMessage = 'Bad request - server validation failed';
+      } else if (e.toString().contains('Evidence must have at least')) {
+        errorMessage = 'Server requires minimum 3 images';
+      } else if (e.toString().contains('500')) {
+        errorMessage = 'Server error - please try again';
+      } else if (e.toString().contains('Connection refused')) {
+        errorMessage = 'Cannot connect to server';
+      } else if (e.toString().contains('SocketException')) {
+        errorMessage = 'Network error - check your connection';
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('❌ Failed to submit evidence: $e'),
+          content: Text('❌ $errorMessage: ${e.toString().split(':').first}'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 5),
         ),

@@ -5,7 +5,7 @@ import '../models/activity_model.dart';
 
 class ActivityProvider with ChangeNotifier {
   final List<Activity> _assignedActivities = [];
-  final String baseUrl = 'http://192.168.1.190:8080/api/site-monitoring';
+  final String baseUrl = 'http://10.0.2.2:8080/api/site-monitoring';
 
   // Hardcoded values as requested
   final int userId = 2;

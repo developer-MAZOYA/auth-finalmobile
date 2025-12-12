@@ -14,6 +14,12 @@ import 'screens/activities_screen.dart';
 import 'services/api_service.dart';
 
 void main() {
+  // Enable better error reporting
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Print startup message
+  print('🚀 Starting TRR Site Report App...');
+
   runApp(const MyApp());
 }
 
@@ -22,6 +28,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('🏗️ Building MyApp widget...');
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => AuthProvider()),
@@ -59,6 +67,7 @@ class MyApp extends StatelessWidget {
           }
           return null;
         },
+        debugShowCheckedModeBanner: false,
       ),
     );
   }
@@ -69,11 +78,15 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('🔐 Checking authentication status...');
+
     final authProvider = Provider.of<AuthProvider>(context);
 
     if (authProvider.isAuthenticated) {
+      print('✅ User is authenticated, showing Dashboard');
       return const DashboardScreen();
     } else {
+      print('🔒 User not authenticated, showing Login');
       return const LoginScreen();
     }
   }

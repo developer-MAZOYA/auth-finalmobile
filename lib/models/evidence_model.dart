@@ -28,7 +28,7 @@ class Evidence {
   });
 
   Map<String, dynamic> toJson() {
-    return {
+    Map<String, dynamic> json = {
       'evidenceId': evidenceId,
       'activityId': activityId,
       'observationId': observationId,
@@ -38,32 +38,66 @@ class Evidence {
       'address': address,
       'timestamp': timestamp.toIso8601String(),
       'accuracy': accuracy,
-      'altitude': altitude,
-      'altitudeAccuracy': altitudeAccuracy,
-      'observationText': observationText,
     };
+
+    if (altitude != null) {
+      json['altitude'] = altitude;
+    }
+
+    if (altitudeAccuracy != null) {
+      json['altitudeAccuracy'] = altitudeAccuracy;
+    }
+
+    if (observationText != null) {
+      json['observationText'] = observationText;
+    }
+
+    return json;
   }
 
   factory Evidence.fromJson(Map<String, dynamic> json) {
-    return Evidence(
-      evidenceId: json['evidenceId']?.toString() ?? '',
-      activityId: json['activityId']?.toString() ?? '',
-      observationId: json['observationId']?.toString() ?? '',
-      imagePaths: List<String>.from(json['imagePaths'] ?? []),
-      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
-      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
-      address: json['address'] ?? '',
-      timestamp:
-          DateTime.parse(json['timestamp'] ?? DateTime.now().toIso8601String()),
-      accuracy: (json['accuracy'] as num?)?.toDouble() ?? 0.0,
-      altitude: (json['altitude'] as num?)?.toDouble(),
-      altitudeAccuracy: (json['altitudeAccuracy'] as num?)?.toDouble(),
-      observationText: json['observationText'],
-    );
+    try {
+      // Handle different JSON structures from backend
+      // The evidence might be at the root or in a 'data' field
+      Map<String, dynamic> evidenceData = json;
+
+      // If the evidence is in a 'data' field
+      if (json.containsKey('data') && json['data'] is Map<String, dynamic>) {
+        evidenceData = json['data'];
+      }
+
+      // If evidence is directly in the response
+      return Evidence(
+        evidenceId: evidenceData['evidenceId']?.toString() ?? '',
+        activityId: evidenceData['activityId']?.toString() ?? '',
+        observationId: evidenceData['observationId']?.toString() ?? '',
+        imagePaths: List<String>.from(evidenceData['imagePaths'] ?? []),
+        latitude: (evidenceData['latitude'] as num?)?.toDouble() ?? 0.0,
+        longitude: (evidenceData['longitude'] as num?)?.toDouble() ?? 0.0,
+        address: evidenceData['address'] ?? '',
+        timestamp: DateTime.parse(evidenceData['timestamp'] ??
+            evidenceData['createdAt'] ??
+            DateTime.now().toIso8601String()),
+        accuracy: (evidenceData['accuracy'] as num?)?.toDouble() ?? 0.0,
+        altitude: (evidenceData['altitude'] as num?)?.toDouble(),
+        altitudeAccuracy:
+            (evidenceData['altitudeAccuracy'] as num?)?.toDouble(),
+        observationText: evidenceData['observationText'],
+      );
+    } catch (e) {
+      print('Error parsing Evidence from JSON: $e');
+      print('JSON data: $json');
+      rethrow;
+    }
   }
 
   int get imageCount => imagePaths.length;
   bool get hasImages => imagePaths.isNotEmpty;
+
+  @override
+  String toString() {
+    return 'Evidence(id: $evidenceId, activity: $activityId, observation: $observationId, images: $imageCount)';
+  }
 }
 
 class EvidenceRequest {
@@ -92,7 +126,7 @@ class EvidenceRequest {
   });
 
   Map<String, dynamic> toJson() {
-    return {
+    Map<String, dynamic> json = {
       'activityId': activityId,
       'observationId': observationId,
       'imagePaths': imagePaths,
@@ -100,9 +134,52 @@ class EvidenceRequest {
       'longitude': longitude,
       'address': address,
       'accuracy': accuracy,
-      'altitude': altitude,
-      'altitudeAccuracy': altitudeAccuracy,
-      'observationText': observationText,
     };
+
+    if (altitude != null) {
+      json['altitude'] = altitude;
+    }
+
+    if (altitudeAccuracy != null) {
+      json['altitudeAccuracy'] = altitudeAccuracy;
+    }
+
+    if (observationText != null) {
+      json['observationText'] = observationText;
+    }
+
+    return json;
+  }
+
+  // Helper method to create from captured data
+  factory EvidenceRequest.fromCaptureData({
+    required String activityId,
+    required String observationId,
+    required double latitude,
+    required double longitude,
+    required String address,
+    required double accuracy,
+    List<String>? imagePaths,
+    double? altitude,
+    double? altitudeAccuracy,
+    String? observationText,
+  }) {
+    return EvidenceRequest(
+      activityId: activityId,
+      observationId: observationId,
+      imagePaths: imagePaths ?? [],
+      latitude: latitude,
+      longitude: longitude,
+      address: address,
+      accuracy: accuracy,
+      altitude: altitude,
+      altitudeAccuracy: altitudeAccuracy,
+      observationText: observationText,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'EvidenceRequest(activity: $activityId, observation: $observationId, images: ${imagePaths.length})';
   }
 }

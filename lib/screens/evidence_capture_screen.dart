@@ -40,6 +40,10 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
   final TextEditingController _observationTextController =
       TextEditingController();
 
+  // Step management
+  int _currentStep = 1;
+  final PageController _pageController = PageController();
+
   @override
   void initState() {
     super.initState();
@@ -49,17 +53,12 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
   @override
   void dispose() {
     _observationTextController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final remainingImages = _maxImages - _capturedImages.length;
-    final canTakeMoreImages = remainingImages > 0;
-    final hasLocation =
-        _currentLocation.isNotEmpty && _currentLocation['success'] == true;
-    final hasMinimumImages = _capturedImages.length >= _minImages;
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Capture Evidence - ${widget.activity.activityTitle}'),
@@ -67,36 +66,659 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
         elevation: 0,
         foregroundColor: Colors.grey[800],
       ),
-      body: SingleChildScrollView(
+      body: Column(
+        children: [
+          // Step indicator
+          _buildStepIndicator(),
+
+          // Page content
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                // Step 1: Location and Description
+                _buildLocationStep(),
+
+                // Step 2: Image Capture
+                _buildImageCaptureStep(),
+
+                // Step 3: Review and Submit
+                _buildReviewStep(),
+              ],
+            ),
+          ),
+
+          // Navigation buttons
+          _buildNavigationButtons(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepIndicator() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildStepCircle(1, 'Location'),
+              Expanded(
+                child: Container(
+                  height: 2,
+                  color: _currentStep > 1 ? Colors.blue : Colors.grey[300],
+                ),
+              ),
+              _buildStepCircle(2, 'Photos'),
+              Expanded(
+                child: Container(
+                  height: 2,
+                  color: _currentStep > 2 ? Colors.blue : Colors.grey[300],
+                ),
+              ),
+              _buildStepCircle(3, 'Submit'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _getStepTitle(),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepCircle(int stepNumber, String label) {
+    final bool isActive = _currentStep == stepNumber;
+    final bool isCompleted = _currentStep > stepNumber;
+
+    return Column(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: isCompleted
+                ? Colors.green
+                : isActive
+                    ? Colors.blue
+                    : Colors.grey[300],
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: isCompleted
+                ? const Icon(Icons.check, color: Colors.white, size: 20)
+                : Text(
+                    '$stepNumber',
+                    style: TextStyle(
+                      color: isActive ? Colors.white : Colors.grey[700],
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+            color: isActive ? Colors.blue : Colors.grey[600],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getStepTitle() {
+    switch (_currentStep) {
+      case 1:
+        return 'Step 1: Capture Location & Add Details';
+      case 2:
+        return 'Step 2: Capture Evidence Photos';
+      case 3:
+        return 'Step 3: Review & Submit Evidence';
+      default:
+        return '';
+    }
+  }
+
+  Widget _buildLocationStep() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Observation Info Card
+          _buildObservationInfoCard(),
+          const SizedBox(height: 20),
+
+          // Location Section
+          _buildLocationSection(),
+          const SizedBox(height: 20),
+
+          // Observation Text Field
+          _buildObservationTextField(),
+
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImageCaptureStep() {
+    final remainingImages = _maxImages - _capturedImages.length;
+    final canTakeMoreImages = remainingImages > 0;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Location Summary
+          if (_currentLocation.isNotEmpty &&
+              _currentLocation['success'] == true)
+            _buildLocationSummary(),
+          const SizedBox(height: 20),
+
+          // Image Capture Section
+          Card(
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.camera_alt, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Evidence Photos',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Capture $_minImages-$_maxImages photos for this evidence',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Progress indicator
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.photo_library,
+                          color: _capturedImages.length >= _minImages
+                              ? Colors.green
+                              : Colors.blue,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${_capturedImages.length}/$_maxImages photos',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: _capturedImages.length >= _minImages
+                                      ? Colors.green
+                                      : Colors.blue,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              LinearProgressIndicator(
+                                value: _capturedImages.length / _maxImages,
+                                backgroundColor: Colors.grey[200],
+                                color: _capturedImages.length >= _minImages
+                                    ? Colors.green
+                                    : Colors.blue,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Capture buttons
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: _isCapturingImage
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.add_a_photo),
+                      label: const Text('Take Single Photo'),
+                      onPressed: (canTakeMoreImages && !_isCapturingImage)
+                          ? _takePhoto
+                          : null,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: _isCapturingImage
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.photo_library),
+                      label: Text(
+                          'Take ${remainingImages > 1 ? remainingImages : 1} Photos'),
+                      onPressed: (canTakeMoreImages && !_isCapturingImage)
+                          ? _takeMultiplePhotos
+                          : null,
+                    ),
+                  ),
+
+                  if (!canTakeMoreImages) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.warning,
+                              color: Colors.orange, size: 16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Maximum of $_maxImages photos reached.',
+                              style: const TextStyle(color: Colors.orange),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 20),
+
+                  // Captured Images Gallery
+                  if (_capturedImages.isNotEmpty) _buildImageGallery(),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviewStep() {
+    final hasLocation =
+        _currentLocation.isNotEmpty && _currentLocation['success'] == true;
+    final hasMinimumImages = _capturedImages.length >= _minImages;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Review Summary Card
+          Card(
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.task, color: Colors.green, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Ready to Submit',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildReviewItem(
+                    Icons.check_circle,
+                    'Location Captured',
+                    hasLocation ? 'Completed' : 'Missing',
+                    hasLocation ? Colors.green : Colors.red,
+                  ),
+                  _buildReviewItem(
+                    Icons.description,
+                    'Observation Details',
+                    '${_observationTextController.text.length} characters',
+                    Colors.blue,
+                  ),
+                  _buildReviewItem(
+                    Icons.photo_library,
+                    'Evidence Photos',
+                    '${_capturedImages.length}/$_minImages min',
+                    hasMinimumImages ? Colors.green : Colors.orange,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Location Review
+          if (hasLocation) _buildLocationSummary(),
+          const SizedBox(height: 20),
+
+          // Observation Text Review
+          Card(
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Observation Details:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _observationTextController.text.isNotEmpty
+                        ? _observationTextController.text
+                        : 'No additional details provided',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Images Preview
+          if (_capturedImages.isNotEmpty)
+            Card(
+              elevation: 4,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.photo_library, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${_capturedImages.length} Evidence Photos',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: hasMinimumImages
+                                ? Colors.green[50]
+                                : Colors.orange[50],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${_capturedImages.length}/$_minImages',
+                            style: TextStyle(
+                              color: hasMinimumImages
+                                  ? Colors.green
+                                  : Colors.orange,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 120,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _capturedImages.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.file(
+                                _capturedImages[index],
+                                width: 100,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    width: 100,
+                                    color: Colors.grey[200],
+                                    child: const Icon(Icons.broken_image,
+                                        color: Colors.red),
+                                  );
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviewItem(
+      IconData icon, String title, String value, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.w500)),
+                const SizedBox(height: 2),
+                Text(value, style: TextStyle(color: color, fontSize: 12)),
+              ],
+            ),
+          ),
+          Icon(
+            value == 'Missing' ? Icons.error : Icons.check,
+            color: value == 'Missing' ? Colors.red : color,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationSummary() {
+    return Card(
+      elevation: 2,
+      child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Observation Info Card
-            _buildObservationInfoCard(),
-            const SizedBox(height: 20),
-
-            // Location Section
-            _buildLocationSection(),
-            const SizedBox(height: 20),
-
-            // Observation Text Field
-            _buildObservationTextField(),
-            const SizedBox(height: 20),
-
-            // Image Capture Section
-            _buildImageCaptureSection(),
-            const SizedBox(height: 20),
-
-            // Captured Images Gallery
-            if (_capturedImages.isNotEmpty) _buildImageGallery(),
-            const SizedBox(height: 20),
-
-            // Submit Button
-            if (_capturedImages.isNotEmpty)
-              _buildSubmitButton(hasLocation, hasMinimumImages),
+            const Row(
+              children: [
+                Icon(Icons.location_on, color: Colors.blue, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Location',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('📍 ${_currentLocation['address']}'),
+                  const SizedBox(height: 4),
+                  Text(
+                      '🌐 ${_currentLocation['latitude']?.toStringAsFixed(6)}, ${_currentLocation['longitude']?.toStringAsFixed(6)}'),
+                  if (_currentLocation['accuracy'] != null)
+                    Text(
+                        '📏 Accuracy: ${_currentLocation['accuracy']?.toStringAsFixed(2)}m'),
+                ],
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildNavigationButtons() {
+    final hasLocation =
+        _currentLocation.isNotEmpty && _currentLocation['success'] == true;
+    final hasMinimumImages = _capturedImages.length >= _minImages;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey[300]!)),
+      ),
+      child: Row(
+        children: [
+          // Back button
+          if (_currentStep > 1)
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _goToPreviousStep,
+                child: const Text('Back'),
+              ),
+            ),
+          if (_currentStep > 1) const SizedBox(width: 12),
+
+          // Next/Submit button
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () {
+                switch (_currentStep) {
+                  case 1:
+                    if (hasLocation) {
+                      _goToNextStep();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please capture location first'),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                    }
+                    break;
+                  case 2:
+                    if (hasMinimumImages) {
+                      _goToNextStep();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                              'Minimum $_minImages photos required. You have ${_capturedImages.length}'),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                    }
+                    break;
+                  case 3:
+                    _submitEvidence();
+                    break;
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _currentStep == 3 ? Colors.green : Colors.blue,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: _isSubmitting && _currentStep == 3
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _currentStep == 3 ? 'Submit Evidence' : 'Continue',
+                          style: const TextStyle(
+                              fontSize: 16, color: Colors.white),
+                        ),
+                        if (_currentStep != 3) ...[
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward,
+                              color: Colors.white, size: 20),
+                        ],
+                      ],
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -372,139 +994,6 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
     );
   }
 
-  Widget _buildImageCaptureSection() {
-    final remainingImages = _maxImages - _capturedImages.length;
-    final canTakeMoreImages = remainingImages > 0;
-    final hasLocation =
-        _currentLocation.isNotEmpty && _currentLocation['success'] == true;
-
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.camera_alt, size: 20),
-                SizedBox(width: 8),
-                Text(
-                  'Evidence Images',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Capture $_minImages-$_maxImages photos for this evidence (${_capturedImages.length}/$_maxImages)',
-              style: TextStyle(
-                fontSize: 14,
-                color: _capturedImages.length >= _minImages
-                    ? Colors.green
-                    : Colors.grey,
-                fontWeight: _capturedImages.length >= _minImages
-                    ? FontWeight.bold
-                    : FontWeight.normal,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Single Photo Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: _isCapturingImage
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.add_a_photo),
-                label: const Text('Take Single Photo'),
-                onPressed:
-                    (hasLocation && canTakeMoreImages && !_isCapturingImage)
-                        ? _takePhoto
-                        : null,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Multiple Photos Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: _isCapturingImage
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.photo_library),
-                label: Text(
-                    'Take ${remainingImages > 1 ? remainingImages : 1} Photos'),
-                onPressed:
-                    (hasLocation && canTakeMoreImages && !_isCapturingImage)
-                        ? _takeMultiplePhotos
-                        : null,
-              ),
-            ),
-
-            if (!canTakeMoreImages) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.orange[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.warning, color: Colors.orange, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Maximum of $_maxImages photos reached for this evidence.',
-                        style:
-                            const TextStyle(fontSize: 12, color: Colors.orange),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            if (!hasLocation) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.info, color: Colors.blue, size: 16),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Please capture location first before taking photos.',
-                        style: TextStyle(fontSize: 12, color: Colors.blue),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildImageGallery() {
     return Card(
       elevation: 4,
@@ -517,7 +1006,7 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Evidence Photos',
+                  'Captured Photos',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -641,39 +1130,28 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
     );
   }
 
-  Widget _buildSubmitButton(bool hasLocation, bool hasMinimumImages) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: (hasLocation && hasMinimumImages && !_isSubmitting)
-            ? _submitEvidence
-            : null,
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          backgroundColor: hasMinimumImages ? Colors.green : Colors.orange,
-        ),
-        child: _isSubmitting
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.cloud_upload, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Submit Evidence with ${_capturedImages.length} Images',
-                    style: const TextStyle(fontSize: 16, color: Colors.white),
-                  ),
-                ],
-              ),
-      ),
-    );
+  void _goToNextStep() {
+    if (_currentStep < 3) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      setState(() {
+        _currentStep++;
+      });
+    }
+  }
+
+  void _goToPreviousStep() {
+    if (_currentStep > 1) {
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      setState(() {
+        _currentStep--;
+      });
+    }
   }
 
   Future<void> _getCurrentLocation() async {
@@ -702,16 +1180,6 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
   }
 
   Future<void> _takePhoto() async {
-    if (_currentLocation.isEmpty || _currentLocation['success'] != true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please capture location first'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
     if (_capturedImages.length >= _maxImages) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -756,16 +1224,6 @@ class _EvidenceCaptureScreenState extends State<EvidenceCaptureScreen> {
   }
 
   Future<void> _takeMultiplePhotos() async {
-    if (_currentLocation.isEmpty || _currentLocation['success'] != true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please capture location first'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
     final remainingImages = _maxImages - _capturedImages.length;
     if (remainingImages <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(

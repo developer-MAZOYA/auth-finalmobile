@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 
 class CustomTextField extends StatelessWidget {
   final String label;
+  final TextEditingController controller;
   final bool obscureText;
   final TextInputType keyboardType;
-  final TextEditingController controller;
-  final String? Function(String?)? validator;
+  final String? Function(String?) validator;
+  final Widget? suffixIcon;
+  final Color backgroundColor;
+  final Color borderColor;
+  final Color textColor;
+  final Color labelColor;
 
   const CustomTextField({
     Key? key,
@@ -13,7 +18,13 @@ class CustomTextField extends StatelessWidget {
     required this.controller,
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
-    this.validator,
+    required this.validator,
+    this.suffixIcon,
+    this.backgroundColor = Colors.white,
+    this.borderColor = Colors.grey,
+    this.textColor = Colors.black,
+    this.labelColor = Colors.grey,
+    required Icon prefixIcon,
   }) : super(key: key);
 
   @override
@@ -23,16 +34,25 @@ class CustomTextField extends StatelessWidget {
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
+      style: TextStyle(color: textColor),
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.primary,
-            width: 2.0,
-          ),
+        labelStyle: TextStyle(color: labelColor),
+        filled: true,
+        fillColor: backgroundColor,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.0),
+          borderSide: BorderSide(color: borderColor),
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.0),
+          borderSide: BorderSide(color: borderColor),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.0),
+          borderSide: BorderSide(color: borderColor.withOpacity(0.8), width: 2),
+        ),
+        suffixIcon: suffixIcon,
       ),
     );
   }

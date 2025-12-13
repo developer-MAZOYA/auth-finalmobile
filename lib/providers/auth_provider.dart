@@ -225,4 +225,6 @@ class AuthProvider with ChangeNotifier {
       }
     }
   }
+
+  void setError(String s) {}
 }
